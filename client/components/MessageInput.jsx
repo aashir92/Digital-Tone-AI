@@ -2,7 +2,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, onPasteFromClipboard, loading }) {
+function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, loading }) {
   return (
     <div className="space-y-3">
       <div>
@@ -12,9 +12,6 @@ function MessageInput({ message, setMessage, relationship, setRelationship, onAn
           onChange={(event) => setMessage(event.target.value)}
           placeholder="Paste the message you received..."
         />
-        <Button onClick={onPasteFromClipboard} type="button" variant="secondary" className="mt-2 w-full" disabled={loading}>
-          Paste from Clipboard
-        </Button>
       </div>
 
       <div>

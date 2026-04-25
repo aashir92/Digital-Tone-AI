@@ -27,20 +27,6 @@ function Home() {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }
 
-  async function onPasteFromClipboard() {
-    try {
-      const clipText = await navigator.clipboard.readText();
-      if (!clipText.trim()) {
-        addToast("Clipboard is empty. Copy a WhatsApp message first.", "info");
-        return;
-      }
-      setMessage(clipText);
-      addToast("Message pasted from clipboard.", "success");
-    } catch {
-      addToast("Could not read clipboard. Please allow clipboard access in Chrome.", "error");
-    }
-  }
-
   async function onAnalyze() {
     if (!message.trim()) {
       addToast("Please enter a message before analyzing.", "error");
@@ -89,7 +75,6 @@ function Home() {
               relationship={relationship}
               setRelationship={setRelationship}
               onAnalyze={onAnalyze}
-              onPasteFromClipboard={onPasteFromClipboard}
               loading={loading}
             />
 
