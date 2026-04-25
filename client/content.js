@@ -171,17 +171,16 @@
   }
 
   async function handleAnalyzeClick() {
+    // Attempt to extract text quietly
     const extracted = getComposerText() || getLastIncomingMessage() || getAnyLastMessage();
-    if (!extracted) {
-      showNotice("No text found in this chat yet.", "error");
-      return;
-    }
 
+    // Still save whatever we found (or explicitly empty string) 
+    // so the popup opens clean if no text.
     try {
-      await chrome.storage.local.set({ [STORAGE_KEY]: extracted });
+      await chrome.storage.local.set({ [STORAGE_KEY]: extracted || "" });
       openIframeAnalyzer();
     } catch {
-      showNotice("Could not save message for analysis.", "error");
+      showNotice("Could not open analyzer.", "error");
     }
   }
 
@@ -192,10 +191,10 @@
     button.textContent = "✨ Analyze Current Chat";
     button.setAttribute("aria-label", "Analyze current WhatsApp chat");
     button.style.position = "fixed";
-    // Place it at top-center by default
-    button.style.top = "75px";
-    button.style.left = "50%";
-    button.style.transform = "translateX(-50%)";
+    
+    // Place it at top-right near header as requested in the screenshot
+    button.style.top = "10px";
+    button.style.right = "280px";
     button.style.height = "46px";
     button.style.padding = "0 16px";
     button.style.border = "none";
@@ -235,7 +234,7 @@
         currentY = e.clientY - initialY;
         xOffset = currentX;
         yOffset = currentY;
-        button.style.transform = `translateX(calc(-50% + ${currentX}px)) translateY(${currentY}px)`;
+        button.style.transform = `translate(${currentX}px, ${currentY}px)`;
         // If moved more than somewhat, count as drag
         if (Math.abs(currentX) > 5 || Math.abs(currentY) > 5) {
             hasDragged = true;
