@@ -1,7 +1,23 @@
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-function Interpretation({ data }) {
+function Interpretation({ data, loading }) {
+  if (loading) {
+    return (
+      <Card className="fade-up">
+        <CardHeader>
+          <CardTitle>Receiver-Side Interpretation</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
+          <div className="h-14 w-full animate-pulse rounded bg-slate-200" />
+          <div className="h-14 w-full animate-pulse rounded bg-slate-200" />
+          <div className="h-14 w-full animate-pulse rounded bg-slate-200" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!data) return null;
 
   return (

@@ -1,6 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-function Suggestions({ suggestions = [] }) {
+function Suggestions({ suggestions = [], loading }) {
+  if (loading) {
+    return (
+      <Card className="fade-up">
+        <CardHeader>
+          <CardTitle>Improved Versions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="h-12 w-full animate-pulse rounded bg-slate-200" />
+            <div className="h-12 w-full animate-pulse rounded bg-slate-200" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!suggestions.length) return null;
 
   return (

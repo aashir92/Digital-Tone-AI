@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Digital Tone Gap",
+  "description": "AI-powered tone analysis assistant for WhatsApp conversations.",
+  "version": "1.0.0",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://*.whatsapp.com/*",
+    "http://localhost:5000/*",
+    "https://your-backend-domain.com/*"
+  ]
+}

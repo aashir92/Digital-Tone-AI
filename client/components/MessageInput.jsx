@@ -2,7 +2,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, loading, mode }) {
+function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, onPasteFromClipboard, loading, mode }) {
   const label = mode === "compose" ? "Write your outgoing message" : "Paste incoming message";
 
   return (
@@ -14,6 +14,9 @@ function MessageInput({ message, setMessage, relationship, setRelationship, onAn
           onChange={(event) => setMessage(event.target.value)}
           placeholder={mode === "compose" ? "Type a message before sending..." : "Paste the message you received..."}
         />
+        <Button onClick={onPasteFromClipboard} type="button" variant="secondary" className="mt-2 w-full" disabled={loading}>
+          Paste from Clipboard
+        </Button>
       </div>
 
       <div>

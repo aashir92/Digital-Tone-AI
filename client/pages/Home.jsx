@@ -4,6 +4,7 @@ import MessageInput from "../components/MessageInput";
 import Suggestions from "../components/Suggestions";
 import ToneAnalysis from "../components/ToneAnalysis";
 import { Loader } from "../components/ui/loader";
+import { ToastViewport } from "../components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { analyzeTone } from "../services/api";
@@ -13,96 +14,129 @@ function Home() {
   const [message, setMessage] = useState("");
   const [relationship, setRelationship] = useState("Friend");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
   const modeLabel = useMemo(() => (tab === "compose" ? "Compose Mode" : "Interpret Mode"), [tab]);
 
+  function addToast(messageText, tone = "info") {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setToasts((current) => [...current, { id, message: messageText, tone }]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+    }, 4500);
+  }
+
+  function dismissToast(id) {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }
+
+  async function onPasteFromClipboard() {
+    try {
+      const clipText = await navigator.clipboard.readText();
+      if (!clipText.trim()) {
+        addToast("Clipboard is empty. Copy a WhatsApp message first.", "info");
+        return;
+      }
+      setMessage(clipText);
+      addToast("Message pasted from clipboard.", "success");
+    } catch {
+      addToast("Could not read clipboard. Please allow clipboard access in Chrome.", "error");
+    }
+  }
+
   async function onAnalyze() {
     if (!message.trim()) {
-      setError("Please enter a message before analyzing.");
+      addToast("Please enter a message before analyzing.", "error");
+      setResult(null);
+      return;
+    }
+
+    if (!relationship) {
+      addToast("Please choose a relationship context.", "error");
       setResult(null);
       return;
     }
 
     setLoading(true);
-    setError("");
 
     try {
       const data = await analyzeTone({ message, relationship, mode: tab });
       setResult(data);
     } catch (err) {
       setResult(null);
-      setError(err.message || "Could not analyze message right now.");
+      addToast(err.message || "Could not analyze message right now.", "error");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-10">
-      <div className="mx-auto mb-6 max-w-2xl text-center fade-up">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">The Digital Tone Gap</h1>
-        <p className="mt-2 text-sm text-slate-600">Emotional Intelligence Assistant for Text Communication</p>
-        <p className="mt-3 text-xs font-medium text-slate-500">🔒 Your messages are not stored</p>
+    <main className="h-[600px] w-[400px] overflow-hidden bg-slate-50 text-slate-900">
+      <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+
+      <div className="h-full overflow-y-auto px-3 py-4">
+        <div className="mx-auto mb-4 max-w-2xl text-center fade-up">
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Digital Tone Gap</h1>
+          <p className="mt-1 text-xs text-slate-600">Your WhatsApp tone companion</p>
+          <p className="mt-2 text-xs font-medium text-slate-500">Messages are analyzed only when you submit</p>
+        </div>
+
+        <Card className="mx-auto border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle>{modeLabel}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={tab} onValueChange={(value) => setTab(value)}>
+              <TabsList>
+                <TabsTrigger value="compose">Compose Mode</TabsTrigger>
+                <TabsTrigger value="interpret">Interpret Mode</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="compose">
+                <MessageInput
+                  mode="compose"
+                  message={message}
+                  setMessage={setMessage}
+                  relationship={relationship}
+                  setRelationship={setRelationship}
+                  onAnalyze={onAnalyze}
+                  onPasteFromClipboard={onPasteFromClipboard}
+                  loading={loading}
+                />
+              </TabsContent>
+
+              <TabsContent value="interpret">
+                <MessageInput
+                  mode="interpret"
+                  message={message}
+                  setMessage={setMessage}
+                  relationship={relationship}
+                  setRelationship={setRelationship}
+                  onAnalyze={onAnalyze}
+                  onPasteFromClipboard={onPasteFromClipboard}
+                  loading={loading}
+                />
+              </TabsContent>
+            </Tabs>
+
+            {loading && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                <Loader />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <section className="mx-auto mt-4 grid max-w-5xl gap-3">
+          <ToneAnalysis data={result} loading={loading} />
+          <Interpretation data={result} loading={loading} />
+        </section>
+
+        <section className="mx-auto mt-3 max-w-5xl pb-2">
+          <Suggestions suggestions={result?.suggestions || []} loading={loading} />
+        </section>
       </div>
-
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>{modeLabel}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={tab} onValueChange={(value) => setTab(value)}>
-            <TabsList>
-              <TabsTrigger value="compose">Compose Mode</TabsTrigger>
-              <TabsTrigger value="interpret">Interpret Mode</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="compose">
-              <MessageInput
-                mode="compose"
-                message={message}
-                setMessage={setMessage}
-                relationship={relationship}
-                setRelationship={setRelationship}
-                onAnalyze={onAnalyze}
-                loading={loading}
-              />
-            </TabsContent>
-
-            <TabsContent value="interpret">
-              <MessageInput
-                mode="interpret"
-                message={message}
-                setMessage={setMessage}
-                relationship={relationship}
-                setRelationship={setRelationship}
-                onAnalyze={onAnalyze}
-                loading={loading}
-              />
-            </TabsContent>
-          </Tabs>
-
-          {loading && (
-            <div className="mt-4">
-              <Loader />
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
-          )}
-        </CardContent>
-      </Card>
-
-      <section className="mx-auto mt-6 grid max-w-5xl gap-4 md:grid-cols-2">
-        <ToneAnalysis data={result} />
-        <Interpretation data={result} />
-      </section>
-
-      <section className="mx-auto mt-4 max-w-5xl">
-        <Suggestions suggestions={result?.suggestions || []} />
-      </section>
     </main>
   );
 }

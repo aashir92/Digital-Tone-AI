@@ -14,7 +14,23 @@ function scoreClass(score) {
   return "text-red-600";
 }
 
-function ToneAnalysis({ data }) {
+function ToneAnalysis({ data, loading }) {
+  if (loading) {
+    return (
+      <Card className="fade-up">
+        <CardHeader>
+          <CardTitle>Tone Analysis</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+          <div className="h-10 w-full animate-pulse rounded bg-slate-200" />
+          <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+          <div className="h-16 w-full animate-pulse rounded bg-slate-200" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!data) return null;
 
   return (
