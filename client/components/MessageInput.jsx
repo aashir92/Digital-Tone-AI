@@ -2,17 +2,15 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, onPasteFromClipboard, loading, mode }) {
-  const label = mode === "compose" ? "Write your outgoing message" : "Paste incoming message";
-
+function MessageInput({ message, setMessage, relationship, setRelationship, onAnalyze, onPasteFromClipboard, loading }) {
   return (
     <div className="space-y-3">
       <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-700">{label}</label>
+        <label className="mb-2 block text-sm font-semibold text-slate-700">Paste incoming message</label>
         <Textarea
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder={mode === "compose" ? "Type a message before sending..." : "Paste the message you received..."}
+          placeholder="Paste the message you received..."
         />
         <Button onClick={onPasteFromClipboard} type="button" variant="secondary" className="mt-2 w-full" disabled={loading}>
           Paste from Clipboard

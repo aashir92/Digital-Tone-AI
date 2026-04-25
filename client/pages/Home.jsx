@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Interpretation from "../components/Interpretation";
 import MessageInput from "../components/MessageInput";
 import Suggestions from "../components/Suggestions";
@@ -6,18 +6,14 @@ import ToneAnalysis from "../components/ToneAnalysis";
 import { Loader } from "../components/ui/loader";
 import { ToastViewport } from "../components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { analyzeTone } from "../services/api";
 
 function Home() {
-  const [tab, setTab] = useState("compose");
   const [message, setMessage] = useState("");
   const [relationship, setRelationship] = useState("Friend");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [toasts, setToasts] = useState([]);
-
-  const modeLabel = useMemo(() => (tab === "compose" ? "Compose Mode" : "Interpret Mode"), [tab]);
 
   function addToast(messageText, tone = "info") {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -61,7 +57,7 @@ function Home() {
     setLoading(true);
 
     try {
-      const data = await analyzeTone({ message, relationship, mode: tab });
+      const data = await analyzeTone({ message, relationship, mode: "interpret" });
       setResult(data);
     } catch (err) {
       setResult(null);
@@ -84,41 +80,18 @@ function Home() {
 
         <Card className="mx-auto border-slate-200 bg-white">
           <CardHeader>
-            <CardTitle>{modeLabel}</CardTitle>
+            <CardTitle>Interpret Mode</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={tab} onValueChange={(value) => setTab(value)}>
-              <TabsList>
-                <TabsTrigger value="compose">Compose Mode</TabsTrigger>
-                <TabsTrigger value="interpret">Interpret Mode</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="compose">
-                <MessageInput
-                  mode="compose"
-                  message={message}
-                  setMessage={setMessage}
-                  relationship={relationship}
-                  setRelationship={setRelationship}
-                  onAnalyze={onAnalyze}
-                  onPasteFromClipboard={onPasteFromClipboard}
-                  loading={loading}
-                />
-              </TabsContent>
-
-              <TabsContent value="interpret">
-                <MessageInput
-                  mode="interpret"
-                  message={message}
-                  setMessage={setMessage}
-                  relationship={relationship}
-                  setRelationship={setRelationship}
-                  onAnalyze={onAnalyze}
-                  onPasteFromClipboard={onPasteFromClipboard}
-                  loading={loading}
-                />
-              </TabsContent>
-            </Tabs>
+            <MessageInput
+              message={message}
+              setMessage={setMessage}
+              relationship={relationship}
+              setRelationship={setRelationship}
+              onAnalyze={onAnalyze}
+              onPasteFromClipboard={onPasteFromClipboard}
+              loading={loading}
+            />
 
             {loading && (
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-2">
