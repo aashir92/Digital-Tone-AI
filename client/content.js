@@ -74,6 +74,102 @@
     }, 2800);
   }
 
+  function openIframeAnalyzer() {
+    let overlay = document.getElementById("dtg-iframe-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "dtg-iframe-overlay";
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.backgroundColor = "rgba(15, 23, 42, 0.6)"; // dark slate
+      overlay.style.zIndex = "9999998";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.backdropFilter = "blur(4px)";
+      overlay.style.opacity = "0";
+      overlay.style.transition = "opacity 0.3s ease";
+      
+      const closeArea = document.createElement("div");
+      closeArea.style.position = "absolute";
+      closeArea.style.width = "100%";
+      closeArea.style.height = "100%";
+      closeArea.addEventListener("click", () => {
+        overlay.style.opacity = "0";
+        setTimeout(() => overlay.style.display = "none", 300);
+      });
+      overlay.appendChild(closeArea);
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.width = "400px";
+      wrapper.style.height = "620px";
+      wrapper.style.backgroundColor = "#fff";
+      wrapper.style.borderRadius = "16px";
+      wrapper.style.boxShadow = "0 25px 50px -12px rgba(0, 0, 0, 0.5)";
+      wrapper.style.overflow = "hidden";
+      wrapper.style.zIndex = "9999999";
+      wrapper.style.transform = "translateY(20px)";
+      wrapper.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+
+      const iframe = document.createElement("iframe");
+      iframe.id = "dtg-iframe-analyzer";
+      iframe.src = chrome.runtime.getURL("index.html");
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.display = "block";
+
+      const closeButton = document.createElement("button");
+      closeButton.innerHTML = "✕";
+      closeButton.style.position = "absolute";
+      closeButton.style.top = "12px";
+      closeButton.style.right = "12px";
+      closeButton.style.width = "32px";
+      closeButton.style.height = "32px";
+      closeButton.style.borderRadius = "50%";
+      closeButton.style.border = "none";
+      closeButton.style.background = "rgba(0,0,0,0.05)";
+      closeButton.style.color = "#334155";
+      closeButton.style.fontSize = "16px";
+      closeButton.style.fontWeight = "bold";
+      closeButton.style.cursor = "pointer";
+      closeButton.style.zIndex = "10000000";
+      closeButton.style.transition = "background 0.2s";
+      closeButton.addEventListener("mouseenter", () => closeButton.style.background = "rgba(0,0,0,0.1)");
+      closeButton.addEventListener("mouseleave", () => closeButton.style.background = "rgba(0,0,0,0.05)");
+      closeButton.addEventListener("click", () => {
+        overlay.style.opacity = "0";
+        wrapper.style.transform = "translateY(20px)";
+        setTimeout(() => overlay.style.display = "none", 300);
+      });
+
+      wrapper.appendChild(iframe);
+      wrapper.appendChild(closeButton);
+      overlay.appendChild(wrapper);
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        overlay.style.opacity = "1";
+        wrapper.style.transform = "translateY(0)";
+      });
+    } else {
+      overlay.style.display = "flex";
+      const wrapper = overlay.querySelector("div[style*='position: relative']");
+      requestAnimationFrame(() => {
+        overlay.style.opacity = "1";
+        if (wrapper) wrapper.style.transform = "translateY(0)";
+      });
+      const iframe = document.getElementById("dtg-iframe-analyzer");
+      if (iframe) {
+         iframe.src = chrome.runtime.getURL("index.html");
+      }
+    }
+  }
+
   async function handleAnalyzeClick() {
     const extracted = getComposerText() || getLastIncomingMessage() || getAnyLastMessage();
     if (!extracted) {
@@ -83,12 +179,7 @@
 
     try {
       await chrome.storage.local.set({ [STORAGE_KEY]: extracted });
-      try {
-        await chrome.runtime.sendMessage({ type: "DTG_OPEN_POPUP" });
-      } catch {
-        // No background listener is required for this flow.
-      }
-      showNotice("Message captured. Open Digital Tone Gap from toolbar.");
+      openIframeAnalyzer();
     } catch {
       showNotice("Could not save message for analysis.", "error");
     }

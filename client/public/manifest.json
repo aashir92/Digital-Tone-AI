@@ -16,5 +16,11 @@
       "matches": ["https://web.whatsapp.com/*"],
       "js": ["content.js"]
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html"],
+      "matches": ["https://web.whatsapp.com/*"]
+    }
   ]
 }
