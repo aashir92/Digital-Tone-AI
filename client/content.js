@@ -122,6 +122,7 @@
       iframe.style.height = "100%";
       iframe.style.border = "none";
       iframe.style.display = "block";
+      iframe.setAttribute("allow", "clipboard-read; clipboard-write");
 
       const closeButton = document.createElement("button");
       closeButton.innerHTML = "✕";
