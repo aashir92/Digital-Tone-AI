@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Digital Tone Gap",
+  "description": "AI-powered tone analysis assistant for WhatsApp conversations.",
+  "version": "1.0.0",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "clipboardRead",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.whatsapp.com/*",
+    "https://digital-tone-ai.vercel.app/*"
+  ],
+  "content_scripts": [
+    {
+      "js": [
+        "assets/content.js-CwDkHROR.js"
+      ],
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "resources": [
+        "index.html",
+        "assets/*",
+        "assets/content.js-CwDkHROR.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}
