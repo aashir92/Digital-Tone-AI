@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://digital-tone-ai.vercel.app";
 
 export async function analyzeTone(payload) {
   const response = await fetch(`${API_BASE_URL}/api/analyze`, {

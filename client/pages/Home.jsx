@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { HelpCircle } from "lucide-react";
 import Interpretation from "../components/Interpretation";
 import MessageInput from "../components/MessageInput";
 import Suggestions from "../components/Suggestions";
@@ -9,11 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { analyzeTone } from "../services/api";
 
 function Home() {
+  const PREFILL_KEY = "dtg_prefill_message";
   const [message, setMessage] = useState("");
   const [relationship, setRelationship] = useState("Friend");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [toasts, setToasts] = useState([]);
+  const [showHowTo, setShowHowTo] = useState(false);
 
   function addToast(messageText, tone = "info") {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -25,6 +28,40 @@ function Home() {
 
   function dismissToast(id) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
+  }
+
+  useEffect(() => {
+    async function hydratePrefill() {
+      if (typeof chrome === "undefined" || !chrome.storage?.local) {
+        return;
+      }
+      try {
+        const stored = await chrome.storage.local.get(PREFILL_KEY);
+        const prefill = String(stored?.[PREFILL_KEY] || "").trim();
+        if (!prefill) return;
+        setMessage(prefill);
+        await chrome.storage.local.remove(PREFILL_KEY);
+        addToast("Message loaded from WhatsApp.", "success");
+      } catch {
+        // Ignore extension storage failures and keep manual flow working.
+      }
+    }
+
+    hydratePrefill();
+  }, []);
+
+  async function onPasteFromWhatsApp() {
+    try {
+      const clipText = await navigator.clipboard.readText();
+      if (!clipText.trim()) {
+        addToast("Clipboard is empty. Copy a WhatsApp message first.", "info");
+        return;
+      }
+      setMessage(clipText);
+      addToast("Message pasted successfully.", "success");
+    } catch {
+      addToast("Paste failed. Please copy the message from WhatsApp and try again.", "error");
+    }
   }
 
   async function onAnalyze() {
@@ -75,6 +112,7 @@ function Home() {
               relationship={relationship}
               setRelationship={setRelationship}
               onAnalyze={onAnalyze}
+              onPasteFromWhatsApp={onPasteFromWhatsApp}
               loading={loading}
             />
 
@@ -93,6 +131,27 @@ function Home() {
 
         <section className="mx-auto mt-3 max-w-5xl pb-2">
           <Suggestions suggestions={result?.suggestions || []} loading={loading} />
+        </section>
+
+        <section className="mx-auto mt-3 max-w-5xl pb-2">
+          <button
+            type="button"
+            onClick={() => setShowHowTo((value) => !value)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            <HelpCircle className="h-4 w-4" />
+            How to use
+          </button>
+
+          {showHowTo && (
+            <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-sm">
+              <ol className="list-decimal space-y-1 pl-5">
+                <li>Copy a confusing message from WhatsApp.</li>
+                <li>Click <strong>Paste from WhatsApp</strong> here.</li>
+                <li>Select the relationship and see the magic.</li>
+              </ol>
+            </div>
+          )}
         </section>
       </div>
     </main>

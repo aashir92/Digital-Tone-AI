@@ -6,10 +6,15 @@
   "action": {
     "default_popup": "index.html"
   },
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab", "scripting", "storage", "clipboardRead", "clipboardWrite"],
   "host_permissions": [
     "https://*.whatsapp.com/*",
-    "http://localhost:5000/*",
     "https://digital-tone-ai.vercel.app/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"]
+    }
   ]
 }
