@@ -4,14 +4,47 @@
   const STORAGE_KEY = "dtg_prefill_message";
 
   function getComposerText() {
-    const composer = document.querySelector('footer div[contenteditable="true"][data-tab]');
-    return composer?.innerText?.trim() || "";
+    // Try multiple possible composer selectors
+    const composer = document.querySelector('footer div[contenteditable="true"]');
+    if (composer && (composer.innerText || composer.textContent).trim()) {
+      return (composer.innerText || composer.textContent).trim();
+    }
+    const titleComposer = document.querySelector('div[title="Type a message"]');
+    if (titleComposer && (titleComposer.innerText || titleComposer.textContent).trim()) {
+      return (titleComposer.innerText || titleComposer.textContent).trim();
+    }
+    return "";
   }
 
   function getLastIncomingMessage() {
-    const incoming = document.querySelectorAll("div.message-in span.selectable-text");
-    if (!incoming.length) return "";
-    return incoming[incoming.length - 1]?.innerText?.trim() || "";
+    const incoming = document.querySelectorAll("div.message-in");
+    for (let i = incoming.length - 1; i >= 0; i--) {
+      const node = incoming[i];
+      const textNode = node.querySelector("span.selectable-text span, span.copyable-text");
+      if (textNode && (textNode.innerText || textNode.textContent).trim()) {
+        return (textNode.innerText || textNode.textContent).trim();
+      }
+      const selectable = node.querySelector("span.selectable-text");
+      if (selectable && (selectable.innerText || selectable.textContent).trim()) {
+        return (selectable.innerText || selectable.textContent).trim();
+      }
+      const rawText = (node.innerText || node.textContent).trim();
+      if (rawText && !rawText.match(/^(\d{1,2}:\d{2})/)) {
+        return rawText;
+      }
+    }
+    return "";
+  }
+
+  function getAnyLastMessage() {
+    // Fallback: grab the last piece of selectable text in the document
+    const selectable = document.querySelectorAll("span.selectable-text");
+    for (let i = selectable.length - 1; i >= 0; i--) {
+      if (selectable[i].closest('footer')) continue; // skip the composer
+      const txt = (selectable[i].innerText || selectable[i].textContent).trim();
+      if (txt) return txt;
+    }
+    return "";
   }
 
   function showNotice(text, tone = "info") {
@@ -22,8 +55,9 @@
     notice.id = NOTICE_ID;
     notice.textContent = text;
     notice.style.position = "fixed";
-    notice.style.bottom = "120px";
-    notice.style.right = "20px";
+    notice.style.top = "125px"; // changed notice to top as well
+    notice.style.left = "50%";
+    notice.style.transform = "translateX(-50%)";
     notice.style.padding = "10px 12px";
     notice.style.borderRadius = "10px";
     notice.style.fontSize = "12px";
@@ -41,7 +75,7 @@
   }
 
   async function handleAnalyzeClick() {
-    const extracted = getComposerText() || getLastIncomingMessage();
+    const extracted = getComposerText() || getLastIncomingMessage() || getAnyLastMessage();
     if (!extracted) {
       showNotice("No text found in this chat yet.", "error");
       return;
@@ -67,8 +101,10 @@
     button.textContent = "✨ Analyze Current Chat";
     button.setAttribute("aria-label", "Analyze current WhatsApp chat");
     button.style.position = "fixed";
-    button.style.right = "20px";
-    button.style.bottom = "72px";
+    // Place it at top-center by default
+    button.style.top = "75px";
+    button.style.left = "50%";
+    button.style.transform = "translateX(-50%)";
     button.style.height = "46px";
     button.style.padding = "0 16px";
     button.style.border = "none";
@@ -77,19 +113,63 @@
     button.style.color = "#ffffff";
     button.style.fontSize = "13px";
     button.style.fontWeight = "700";
-    button.style.cursor = "pointer";
+    button.style.cursor = "grab";
     button.style.zIndex = "999999";
     button.style.boxShadow = "0 14px 30px rgba(15, 23, 42, 0.28)";
-    button.style.transition = "transform 0.15s ease, box-shadow 0.15s ease";
+    button.style.transition = "box-shadow 0.15s ease";
+
+    let isDragging = false;
+    let hasDragged = false;
+    let initialX, initialY, currentX, currentY;
+    let xOffset = 0, yOffset = 0;
+
+    button.addEventListener("mousedown", dragStart);
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("mouseup", dragEnd);
+
+    function dragStart(e) {
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+      if (e.target === button) {
+        isDragging = true;
+        hasDragged = false;
+        button.style.cursor = "grabbing";
+      }
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        xOffset = currentX;
+        yOffset = currentY;
+        button.style.transform = `translateX(calc(-50% + ${currentX}px)) translateY(${currentY}px)`;
+        // If moved more than somewhat, count as drag
+        if (Math.abs(currentX) > 5 || Math.abs(currentY) > 5) {
+            hasDragged = true;
+        }
+      }
+    }
+
+    function dragEnd(e) {
+      isDragging = false;
+      button.style.cursor = "grab";
+    }
+
     button.addEventListener("mouseenter", () => {
-      button.style.transform = "translateY(-1px)";
       button.style.boxShadow = "0 16px 34px rgba(15, 23, 42, 0.34)";
     });
     button.addEventListener("mouseleave", () => {
-      button.style.transform = "translateY(0)";
       button.style.boxShadow = "0 14px 30px rgba(15, 23, 42, 0.28)";
     });
-    button.addEventListener("click", handleAnalyzeClick);
+    button.addEventListener("click", (e) => {
+      if (hasDragged) {
+        e.preventDefault();
+        return; // prevent click if it was just dragged
+      }
+      handleAnalyzeClick();
+    });
     return button;
   }
 
